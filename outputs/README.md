@@ -7,3 +7,4 @@
 - `daily_report*.md`：AI 初稿和人工校准日报。
 - `business_report*.md`：业务分析初稿和人工校准报告。
 - `ai_call_log.json`：模型、提示词和返回内容记录。
+- `mysql/`：MySQL 8 迁移后的指标、留存、归因和异常检测 CSV。

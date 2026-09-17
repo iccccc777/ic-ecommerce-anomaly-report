@@ -45,8 +45,10 @@ project_a/
 │  └─ README.md
 ├─ docs/                         # 数据说明、指标口径、方法、复盘和面试故事
 ├─ python/                       # 建库、指标、异常、归因、AI 日报和看板脚本
-├─ sql/                          # 数仓、指标、留存和归因 SQL
-├─ outputs/                      # 指标 CSV、图表、日报和业务报告
+├─ sql/                          # SQLite、MySQL 8 和 PostgreSQL 方言 SQL
+├─ tests/                        # MySQL 迁移与 PostgreSQL 静态检查
+├─ outputs/                      # 指标 CSV、图表、日报、业务报告和 MySQL 结果
+│  └─ mysql/
 ├─ .env.example                  # API Key 配置模板
 ├─ requirements.txt
 └─ 启动看板.bat
@@ -67,6 +69,8 @@ project_a/
 - 指标口径：[docs/05_指标口径.md](docs/05_指标口径.md)
 - 项目复盘：[docs/12_项目复盘.md](docs/12_项目复盘.md)
 - 面试故事：[docs/13_面试故事.md](docs/13_面试故事.md)
+- 数据库迁移说明：[docs/14_数据库迁移.md](docs/14_数据库迁移.md)
+- MySQL 迁移结果：[outputs/mysql/](outputs/mysql/)
 
 ## 环境准备
 
@@ -162,6 +166,32 @@ python python\07_ai_daily_report.py
 
 脚本会生成 `outputs/daily_report.md` 并记录模型、提示词和返回内容到 `outputs/ai_call_log.json`。对外使用的最终版本应为人工校准后的 `outputs/daily_report_calibrated.md`。
 
+### MySQL 8 迁移与校验
+
+在 `.env` 中配置：
+
+```text
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your-password
+MYSQL_DATABASE=ic_ecommerce
+```
+
+迁移 SQLite 抽样数据并生成 MySQL 结果：
+
+```powershell
+python python\09_migrate_to_mysql.py --recreate
+```
+
+校验 MySQL 与 SQLite 结果：
+
+```powershell
+python python\10_validate_mysql_migration.py
+```
+
+本次真实迁移已覆盖 1,966,733 行行为记录，7 个结果文件全部通过一致性校验。详细差异见 [docs/14_数据库迁移.md](docs/14_数据库迁移.md)。
+
 ## 数据与口径
 
 - 抽样：按 `user_id` 稳定哈希保留约 2% 用户，得到 19,476 个用户、1,966,733 行行为。
@@ -182,6 +212,7 @@ python python\07_ai_daily_report.py
 - 缺少价格和订单金额，无法计算 GMV、客单价和收入。
 - 缺少活动、渠道、曝光、库存和竞品数据，异常和归因是相关性分析，不能证明因果。
 - AI 日报只是初稿，所有数字和结论仍需人工校准。
+- MySQL 已完成真实实例迁移验证；PostgreSQL 已完成方言和静态检查，但当前机器未运行 PostgreSQL，未做实例级验证。
 
 ## 下一步
 
@@ -190,3 +221,4 @@ python python\07_ai_daily_report.py
 3. 对 16-21 时运营动作做真实 A/B 实验，不做事后伪实验。
 4. 按首次浏览、首次加购/收藏、首次购买重做严格漏斗。
 5. 使用更长窗口计算 MAU、复购和高价值用户分层。
+6. 如有 PostgreSQL 环境，执行 `sql/postgresql/` 并补充实例级验证记录。

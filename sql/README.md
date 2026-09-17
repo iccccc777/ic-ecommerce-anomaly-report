@@ -7,3 +7,8 @@
 - `05_attribution_category.sql`：类目购买增量明细。
 - `06_attribution_hour.sql`：小时购买增量明细。
 - `07_attribution_user_segment.sql`：DAU 净增量拆解。
+
+方言迁移版本：
+
+- `mysql/`：MySQL 8.0 建表、复合索引和分析查询。
+- `postgresql/`：PostgreSQL 建表和等价查询。

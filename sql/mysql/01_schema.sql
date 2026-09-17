@@ -26,13 +26,31 @@ SELECT
     behavior_type,
     timestamps,
     DATE_FORMAT(
-        DATE_ADD(FROM_UNIXTIME(timestamps), INTERVAL 8 HOUR),
+        DATE_ADD(
+            FROM_UNIXTIME(
+                timestamps - TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW())
+            ),
+            INTERVAL 8 HOUR
+        ),
         '%Y-%m-%d'
     ) AS event_day,
-    HOUR(DATE_ADD(FROM_UNIXTIME(timestamps), INTERVAL 8 HOUR)) AS event_hour
+    HOUR(
+        DATE_ADD(
+            FROM_UNIXTIME(
+                timestamps - TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW())
+            ),
+            INTERVAL 8 HOUR
+        )
+    ) AS event_hour
 FROM behavior
-WHERE DATE(DATE_ADD(FROM_UNIXTIME(timestamps), INTERVAL 8 HOUR))
-      BETWEEN '2017-11-25' AND '2017-12-03';
+WHERE DATE(
+    DATE_ADD(
+        FROM_UNIXTIME(
+            timestamps - TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW())
+        ),
+        INTERVAL 8 HOUR
+    )
+) BETWEEN '2017-11-25' AND '2017-12-03';
 
 CREATE TABLE dim_user (
     user_id BIGINT NOT NULL,

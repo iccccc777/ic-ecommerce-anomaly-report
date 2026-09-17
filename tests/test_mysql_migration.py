@@ -51,6 +51,7 @@ class MySQLMigrationTest(unittest.TestCase):
 
         server = pymysql.connect(**cls.connection_args)
         with server.cursor() as cursor:
+            cursor.execute("SET GLOBAL local_infile = 1")
             cursor.execute(f"DROP DATABASE IF EXISTS `{cls.db_name}`")
             cursor.execute(
                 f"CREATE DATABASE `{cls.db_name}` "
@@ -76,6 +77,7 @@ class MySQLMigrationTest(unittest.TestCase):
             (3, 103, 203, "pv", beijing_ts(2017, 12, 2, 12)),
             (5, 105, 205, "pv", beijing_ts(2017, 12, 3, 13)),
             (6, 106, 206, "pv", beijing_ts(2017, 12, 1, 14)),
+            (7, 107, 207, "pv", beijing_ts(2017, 11, 25, 20)),
         ]
         with cls.conn.cursor() as cursor:
             cursor.executemany(
@@ -111,8 +113,8 @@ class MySQLMigrationTest(unittest.TestCase):
         result = [dict(zip(columns, row)) for row in rows]
         by_day = {row["day"]: row for row in result}
 
-        self.assertEqual(by_day["2017-11-25"]["dau"], 2)
-        self.assertEqual(by_day["2017-11-25"]["pv"], 2)
+        self.assertEqual(by_day["2017-11-25"]["dau"], 3)
+        self.assertEqual(by_day["2017-11-25"]["pv"], 3)
         self.assertEqual(by_day["2017-11-25"]["buy"], 1)
         self.assertEqual(by_day["2017-12-02"]["dau"], 2)
         self.assertEqual(by_day["2017-12-02"]["buy"], 1)
@@ -121,8 +123,26 @@ class MySQLMigrationTest(unittest.TestCase):
         columns, rows = self.run_query("03_funnel.sql")
         result = {row[0]: dict(zip(columns, row)) for row in rows}
 
-        self.assertEqual(result["pv"]["user_count"], 6)
+        self.assertEqual(result["pv"]["user_count"], 7)
         self.assertEqual(result["buy"]["user_count"], 3)
+
+    def test_view_is_independent_of_session_time_zone(self):
+        for time_zone in ("+00:00", "+08:00", "-05:00"):
+            with self.conn.cursor() as cursor:
+                cursor.execute(f"SET time_zone = '{time_zone}'")
+                cursor.execute(
+                    """
+                    SELECT event_day
+                    FROM behavior_clean
+                    WHERE user_id = 7
+                    ORDER BY id
+                    LIMIT 1
+                    """
+                )
+                self.assertEqual(cursor.fetchone()[0], "2017-11-25")
+
+        with self.conn.cursor() as cursor:
+            cursor.execute("SET time_zone = '+00:00'")
 
     def test_user_segment_net_delta(self):
         columns, rows = self.run_query("07_attribution_user_segment.sql")

@@ -6,3 +6,4 @@ plotly
 streamlit
 requests
 PyMySQL==1.1.1
+psycopg[binary]==3.2.9

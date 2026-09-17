@@ -122,7 +122,7 @@ def build_template_report():
 
 异常检测标记 {anomaly_text} 为异动日。
 
-12 月 2 日 DAU 相对 3 日移动平均上升约 {anomaly_days.iloc[0]['dau_pct_to_ma']:.2f}%，相对 11 月 25 日周六上升约 {anomaly_days.iloc[0]['dau_pct_to_prev_week']:.2f}%，说明不是单纯的周末效应。
+12 月 2 日 DAU 相对前 3 日移动平均上升约 {anomaly_days.iloc[0]['dau_pct_to_ma']:.2f}%，相对 11 月 25 日周六上升约 {anomaly_days.iloc[0]['dau_pct_to_prev_week']:.2f}%，说明不是单纯的周末效应。
 
 归因结果显示：
 

@@ -1,5 +1,7 @@
 # 基于大模型的电商经营异动归因与智能日报系统
 
+![tests](https://github.com/iccccc777/ic-ecommerce-anomaly-report/actions/workflows/tests.yml/badge.svg)
+
 公开仓库：<https://github.com/iccccc777/ic-ecommerce-anomaly-report>
 
 一个面向电商经营分析的端到端项目：从用户行为数据出发，完成 SQL 数仓、指标口径、异常检测、异动归因、LLM 日报、人工校准、Streamlit 看板和业务结论。
@@ -43,6 +45,7 @@
 project_a/
 ├─ data/                         # 原始数据、抽样文件和 SQLite；本地生成，不提交
 │  └─ README.md
+├─ .github/workflows/            # MySQL 8 + PostgreSQL 16 自动化测试
 ├─ docs/                         # 数据说明、指标口径、方法、复盘和面试故事
 ├─ python/                       # 建库、指标、异常、归因、AI 日报和看板脚本
 ├─ sql/                          # SQLite、MySQL 8 和 PostgreSQL 方言 SQL
@@ -71,6 +74,19 @@ project_a/
 - 面试故事：[docs/13_面试故事.md](docs/13_面试故事.md)
 - 数据库迁移说明：[docs/14_数据库迁移.md](docs/14_数据库迁移.md)
 - MySQL 迁移结果：[outputs/mysql/](outputs/mysql/)
+
+## 质量与可靠性
+
+- 异常检测使用前 3 日 trailing baseline，判断当天不参与自己的基线计算。
+- MySQL 北京时间转换不依赖会话时区，在 UTC、北京时间和其他时区下日期口径一致。
+- MySQL 和 SQLite 的 7 个结果文件执行逐项一致性校验。
+- GitHub Actions 会启动 MySQL 8 和 PostgreSQL 16 服务，运行全部单元测试与数据库集成测试。
+
+本地运行测试：
+
+```powershell
+python -m unittest discover -s tests -p "test_*.py" -v
+```
 
 ## 环境准备
 
@@ -192,6 +208,15 @@ python python\10_validate_mysql_migration.py
 
 本次真实迁移已覆盖 1,966,733 行行为记录，7 个结果文件全部通过一致性校验。详细差异见 [docs/14_数据库迁移.md](docs/14_数据库迁移.md)。
 
+### 自动化测试
+
+本地测试需要 MySQL 8；PostgreSQL 测试在配置 `POSTGRES_TEST_*` 环境变量后运行。GitHub Actions 会自动提供两个数据库服务：
+
+```powershell
+$env:MYSQL_TEST_PORT = "3307"
+python -m unittest discover -s tests -p "test_*.py" -v
+```
+
 ## 数据与口径
 
 - 抽样：按 `user_id` 稳定哈希保留约 2% 用户，得到 19,476 个用户、1,966,733 行行为。
@@ -212,7 +237,7 @@ python python\10_validate_mysql_migration.py
 - 缺少价格和订单金额，无法计算 GMV、客单价和收入。
 - 缺少活动、渠道、曝光、库存和竞品数据，异常和归因是相关性分析，不能证明因果。
 - AI 日报只是初稿，所有数字和结论仍需人工校准。
-- MySQL 已完成真实实例迁移验证；PostgreSQL 已完成方言和静态检查，但当前机器未运行 PostgreSQL，未做实例级验证。
+- MySQL 已完成真实实例迁移验证；PostgreSQL 已配置实例级集成测试，由 GitHub Actions 的 PostgreSQL 16 容器执行。
 
 ## 下一步
 
